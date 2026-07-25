@@ -97,3 +97,15 @@ def genera_excel_report(
     wb.save(path)
     logger.info(f"Report Excel generato con successo in {path.resolve()}")
     return str(path)
+
+
+class ExcelGenerator:
+    """Generatore di report Excel per la pipeline PMS."""
+
+    def __init__(self, file_path: str = "PMS_Report_Output.xlsx"):
+        self.file_path = file_path
+
+    def generate(self, records: List[Dict[str, Any]], target_device: str = "") -> str:
+        """Genera il file Excel con i dati processati."""
+        return genera_excel_report(records, self.file_path)
+

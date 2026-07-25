@@ -60,3 +60,32 @@ def assegna_tag(testo_avviso: str | None) -> str:
             return categoria
 
     return "Generico"
+
+
+class NLPTagger:
+    """Tagger NLP per la categorizzazione degli eventi e analisi dei competitor."""
+
+    def process_records(
+        self, records: list[dict], competitors: list[str] = None
+    ) -> list[dict]:
+        """Categorizza i record e aggiunge flag relativi ai competitor."""
+        if competitors is None:
+            competitors = []
+
+        processed = []
+        for rec in records:
+            rec_copy = dict(rec)
+            testo = rec_copy.get("descrizione_evento") or rec_copy.get("titolo") or ""
+
+            if not rec_copy.get("tag"):
+                rec_copy["tag"] = assegna_tag(testo)
+
+            fabbricante = str(rec_copy.get("fabbricante", "")).lower()
+            rec_copy["is_competitor"] = any(
+                comp.lower() in fabbricante for comp in competitors if comp
+            )
+
+            processed.append(rec_copy)
+
+        return processed
+

@@ -1,0 +1,10 @@
+{
+  "search_keyword": "Software",
+  "competitors": [
+    "Siemens",
+    "GE Healthcare",
+    "Philips"
+  ],
+  "output_excel_path": "PMS_Report_MDR_2017_745.xlsx",
+  "timeout_seconds": 10
+}

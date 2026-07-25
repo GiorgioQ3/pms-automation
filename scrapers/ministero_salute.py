@@ -97,3 +97,16 @@ def fetch_ministero_salute(limit: int = 10) -> list[dict]:
         logger.error("Errore durante il parsing HTML: %s", exc)
 
     return risultati
+
+
+class MinisteroSaluteScraper:
+    """Connettore/Scraper per il Ministero della Salute italiano."""
+
+    def __init__(self, timeout: int = 10):
+        self.timeout = timeout
+
+    def fetch_data(self, search_term: str = "", limit: int = 10) -> list[dict]:
+        """Recupera gli avvisi di sicurezza dal Ministero della Salute."""
+        return fetch_ministero_salute(limit=limit)
+
+

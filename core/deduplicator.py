@@ -66,3 +66,32 @@ def filtra_nuovi(
 
     salva_storico(path_storico, storico)
     return nuovi_risultati
+
+
+class Deduplicator:
+    """Gestore deduplicazione basato su SHA-256 e storico."""
+
+    def __init__(self, path_storico: str = "pms_history.json"):
+        self.path_storico = path_storico
+
+    def process(self, records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Deduplica la lista di record calcolando un hash SHA-256 e salvandolo nello storico."""
+        import hashlib
+        storico = carica_storico(self.path_storico)
+        unique_records = []
+
+        for rec in records:
+            rec_id = rec.get("id_segnalazione") or rec.get("link_documento") or rec.get("url_fonte")
+            if not rec_id:
+                rec_bytes = json.dumps(rec, sort_keys=True).encode("utf-8")
+                hash_id = hashlib.sha256(rec_bytes).hexdigest()
+            else:
+                hash_id = hashlib.sha256(str(rec_id).encode("utf-8")).hexdigest()
+
+            if hash_id not in storico:
+                unique_records.append(rec)
+                storico.add(hash_id)
+
+        salva_storico(self.path_storico, storico)
+        return unique_records
+
