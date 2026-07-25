@@ -1,7 +1,18 @@
 {
-  "search_keyword": "Software",
+  "search_keyword": "mammography",
+  "default_keywords": [
+    "mammography",
+    "screening",
+    "breast",
+    "screening software",
+    "double blind reading",
+    "ZEEROmed MIS",
+    "O3 Enterprise"
+  ],
   "competitors": [
-    "Siemens",
+    "O3 Enterprise",
+    "Siemens Healthineers",
+    "Hologic",
     "GE Healthcare",
     "Philips"
   ],

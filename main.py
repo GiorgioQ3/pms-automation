@@ -7,6 +7,8 @@ from typing import List, Dict, Any, Optional
 
 from scrapers.ministero_salute import MinisteroSaluteScraper
 from scrapers.openfda_maude import OpenFDAMaudeScraper
+from scrapers.fda_recalls import FDARecallsScraper
+from scrapers.nvd_cybersecurity import NVDCybersecurityScraper
 from core.deduplicator import Deduplicator
 from core.nlp_tagger import NLPTagger
 from core.excel_generator import ExcelGenerator
@@ -35,6 +37,8 @@ class PMSOrchestrator:
         
         self.min_salute_scraper = MinisteroSaluteScraper(timeout=self.timeout)
         self.openfda_scraper = OpenFDAMaudeScraper(timeout=self.timeout)
+        self.fda_recalls_scraper = FDARecallsScraper(timeout=self.timeout)
+        self.nvd_scraper = NVDCybersecurityScraper(timeout=self.timeout)
         self.deduplicator = Deduplicator()
         self.nlp_tagger = NLPTagger()
         self.excel_generator = ExcelGenerator(file_path=self.output_excel_path)
@@ -42,7 +46,7 @@ class PMSOrchestrator:
     def _load_config(self, path: str) -> Dict[str, Any]:
         """Carica la configurazione da JSON con logica Failsafe."""
         default_config = {
-            "search_keyword": "Software",
+            "search_keyword": "mammography",
             "competitors": [],
             "output_excel_path": "PMS_Report_Output.xlsx",
             "timeout_seconds": 10
@@ -67,7 +71,7 @@ class PMSOrchestrator:
         custom_output_path: Optional[str] = None
     ) -> str:
         """Esegue la pipeline PMS usando i parametri forniti o quelli di configurazione."""
-        term = search_term or self.config.get("search_keyword", "Software")
+        term = search_term or self.config.get("search_keyword", "mammography")
         comp_list = competitors if competitors is not None else self.config.get("competitors", [])
         output_file = custom_output_path or self.output_excel_path
 
@@ -95,19 +99,37 @@ class PMSOrchestrator:
         except Exception as e:
             logger.error(f"-> Errore connettore openFDA: {e}")
 
+        # 3. openFDA Recalls
+        logger.info("[3/5] Interrogazione openFDA Device Recalls...")
+        try:
+            recall_records = self.fda_recalls_scraper.fetch_recalls(term)
+            logger.info(f"-> Estratti {len(recall_records)} record da FDA Recalls.")
+            all_raw_records.extend(recall_records)
+        except Exception as e:
+            logger.error(f"-> Errore connettore FDA Recalls: {e}")
+
+        # 4. NIST NVD Cybersecurity
+        logger.info("[4/5] Interrogazione NIST NVD Cybersecurity (MDCG 2019-16)...")
+        try:
+            nvd_records = self.nvd_scraper.fetch_vulnerabilities(term)
+            logger.info(f"-> Estratti {len(nvd_records)} record da NIST NVD.")
+            all_raw_records.extend(nvd_records)
+        except Exception as e:
+            logger.error(f"-> Errore connettore NVD Cybersecurity: {e}")
+
         logger.info(f"Totale record grezzi raccolti: {len(all_raw_records)}")
 
-        # 3. Deduplicazione SHA-256
-        logger.info("[3/5] Avvio deduplicazione SHA-256...")
+        # 5. Deduplicazione SHA-256
+        logger.info("Avvio deduplicazione SHA-256...")
         unique_records = self.deduplicator.process(all_raw_records)
         logger.info(f"-> Record unici dopo deduplicazione: {len(unique_records)}")
 
-        # 4. Tagging NLP
-        logger.info("[4/5] Esecuzione Tagging NLP e verifica Competitors...")
+        # 6. Tagging NLP e Verifica Competitors
+        logger.info("Esecuzione Tagging NLP e verifica Competitors...")
         tagged_records = self.nlp_tagger.process_records(unique_records, competitors=comp_list)
 
-        # 5. Generazione Report Excel
-        logger.info("[5/5] Generazione Report Excel Audit-Ready...")
+        # 7. Generazione Report Excel Audit-Ready
+        logger.info("Generazione Report Excel Audit-Ready...")
         final_file = self.excel_generator.generate(tagged_records, target_device=term)
         logger.info(f"=== PIPELINE COMPLETATA! Report salvato in: {final_file} ===")
 
