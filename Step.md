@@ -12,3 +12,4 @@
 - [x] Step 10: Interfaccia CLI (`argparse`), parametrizzazione completa, audit trail e suite di test completa (44 test)
 - [x] Step 12: Connettori FDA Recalls (`scrapers/fda_recalls.py`), NIST NVD Cybersecurity (`scrapers/nvd_cybersecurity.py`) per SaMD MDCG 2019-16, aggiornamento `config.json` con dominio mammografia e 50 test unitari passing.
 - [x] Step 13: Connettori BfArM Germania (`scrapers/bfarm.py`) e MHRA Regno Unito (`scrapers/mhra.py`), estensione orchestratore a 6 sorgenti regolatorie e 56 test unitari passing.
+- [x] Step 14: Interfaccia Grafica Web Dashboard Streamlit (`app.py`), gestione interattiva 6 fonti regolatorie, audit log viewer e export Excel.
