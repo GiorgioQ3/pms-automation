@@ -9,6 +9,8 @@ from scrapers.ministero_salute import MinisteroSaluteScraper
 from scrapers.openfda_maude import OpenFDAMaudeScraper
 from scrapers.fda_recalls import FDARecallsScraper
 from scrapers.nvd_cybersecurity import NVDCybersecurityScraper
+from scrapers.bfarm import BfArMScraper
+from scrapers.mhra import MHRAScraper
 from core.deduplicator import Deduplicator
 from core.nlp_tagger import NLPTagger
 from core.excel_generator import ExcelGenerator
@@ -39,6 +41,8 @@ class PMSOrchestrator:
         self.openfda_scraper = OpenFDAMaudeScraper(timeout=self.timeout)
         self.fda_recalls_scraper = FDARecallsScraper(timeout=self.timeout)
         self.nvd_scraper = NVDCybersecurityScraper(timeout=self.timeout)
+        self.bfarm_scraper = BfArMScraper(timeout=self.timeout)
+        self.mhra_scraper = MHRAScraper(timeout=self.timeout)
         self.deduplicator = Deduplicator()
         self.nlp_tagger = NLPTagger()
         self.excel_generator = ExcelGenerator(file_path=self.output_excel_path)
@@ -82,7 +86,7 @@ class PMSOrchestrator:
         all_raw_records: List[Dict[str, Any]] = []
 
         # 1. Ministero della Salute IT
-        logger.info("[1/5] Interrogazione Ministero della Salute IT...")
+        logger.info("[1/6] Interrogazione Ministero della Salute IT...")
         try:
             it_records = self.min_salute_scraper.fetch_data(term)
             logger.info(f"-> Estratti {len(it_records)} record da Ministero Salute.")
@@ -91,7 +95,7 @@ class PMSOrchestrator:
             logger.error(f"-> Errore connettore Ministero Salute: {e}")
 
         # 2. openFDA MAUDE
-        logger.info("[2/5] Interrogazione openFDA MAUDE API...")
+        logger.info("[2/6] Interrogazione openFDA MAUDE API...")
         try:
             fda_records = self.openfda_scraper.fetch_events(term)
             logger.info(f"-> Estratti {len(fda_records)} record da openFDA.")
@@ -100,7 +104,7 @@ class PMSOrchestrator:
             logger.error(f"-> Errore connettore openFDA: {e}")
 
         # 3. openFDA Recalls
-        logger.info("[3/5] Interrogazione openFDA Device Recalls...")
+        logger.info("[3/6] Interrogazione openFDA Device Recalls...")
         try:
             recall_records = self.fda_recalls_scraper.fetch_recalls(term)
             logger.info(f"-> Estratti {len(recall_records)} record da FDA Recalls.")
@@ -109,7 +113,7 @@ class PMSOrchestrator:
             logger.error(f"-> Errore connettore FDA Recalls: {e}")
 
         # 4. NIST NVD Cybersecurity
-        logger.info("[4/5] Interrogazione NIST NVD Cybersecurity (MDCG 2019-16)...")
+        logger.info("[4/6] Interrogazione NIST NVD Cybersecurity (MDCG 2019-16)...")
         try:
             nvd_records = self.nvd_scraper.fetch_vulnerabilities(term)
             logger.info(f"-> Estratti {len(nvd_records)} record da NIST NVD.")
@@ -117,18 +121,36 @@ class PMSOrchestrator:
         except Exception as e:
             logger.error(f"-> Errore connettore NVD Cybersecurity: {e}")
 
+        # 5. BfArM Germania
+        logger.info("[5/6] Interrogazione BfArM (Germania)...")
+        try:
+            bfarm_records = self.bfarm_scraper.fetch_notices(term)
+            logger.info(f"-> Estratti {len(bfarm_records)} record da BfArM.")
+            all_raw_records.extend(bfarm_records)
+        except Exception as e:
+            logger.error(f"-> Errore connettore BfArM: {e}")
+
+        # 6. MHRA Regno Unito
+        logger.info("[6/6] Interrogazione MHRA (Regno Unito)...")
+        try:
+            mhra_records = self.mhra_scraper.fetch_alerts(term)
+            logger.info(f"-> Estratti {len(mhra_records)} record da MHRA.")
+            all_raw_records.extend(mhra_records)
+        except Exception as e:
+            logger.error(f"-> Errore connettore MHRA: {e}")
+
         logger.info(f"Totale record grezzi raccolti: {len(all_raw_records)}")
 
-        # 5. Deduplicazione SHA-256
+        # Deduplicazione SHA-256
         logger.info("Avvio deduplicazione SHA-256...")
         unique_records = self.deduplicator.process(all_raw_records)
         logger.info(f"-> Record unici dopo deduplicazione: {len(unique_records)}")
 
-        # 6. Tagging NLP e Verifica Competitors
+        # Tagging NLP e Verifica Competitors
         logger.info("Esecuzione Tagging NLP e verifica Competitors...")
         tagged_records = self.nlp_tagger.process_records(unique_records, competitors=comp_list)
 
-        # 7. Generazione Report Excel Audit-Ready
+        # Generazione Report Excel Audit-Ready
         logger.info("Generazione Report Excel Audit-Ready...")
         final_file = self.excel_generator.generate(tagged_records, target_device=term)
         logger.info(f"=== PIPELINE COMPLETATA! Report salvato in: {final_file} ===")

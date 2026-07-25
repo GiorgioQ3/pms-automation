@@ -44,7 +44,9 @@ def test_orchestrator_pipeline_success(orchestrator):
     with patch.object(orchestrator.min_salute_scraper, 'fetch_data', return_value=mock_it_data), \
          patch.object(orchestrator.openfda_scraper, 'fetch_events', return_value=mock_fda_data), \
          patch.object(orchestrator.fda_recalls_scraper, 'fetch_recalls', return_value=[]), \
-         patch.object(orchestrator.nvd_scraper, 'fetch_vulnerabilities', return_value=[]):
+         patch.object(orchestrator.nvd_scraper, 'fetch_vulnerabilities', return_value=[]), \
+         patch.object(orchestrator.bfarm_scraper, 'fetch_notices', return_value=[]), \
+         patch.object(orchestrator.mhra_scraper, 'fetch_alerts', return_value=[]):
 
         result_file = orchestrator.run(search_term="Software", competitors=["Siemens"])
         assert result_file.endswith(".xlsx")
@@ -54,7 +56,9 @@ def test_orchestrator_failsafe_empty_sources(orchestrator):
     with patch.object(orchestrator.min_salute_scraper, 'fetch_data', return_value=[]), \
          patch.object(orchestrator.openfda_scraper, 'fetch_events', return_value=[]), \
          patch.object(orchestrator.fda_recalls_scraper, 'fetch_recalls', return_value=[]), \
-         patch.object(orchestrator.nvd_scraper, 'fetch_vulnerabilities', return_value=[]):
+         patch.object(orchestrator.nvd_scraper, 'fetch_vulnerabilities', return_value=[]), \
+         patch.object(orchestrator.bfarm_scraper, 'fetch_notices', return_value=[]), \
+         patch.object(orchestrator.mhra_scraper, 'fetch_alerts', return_value=[]):
 
         result_file = orchestrator.run(search_term="Inesistente", competitors=[])
         assert result_file.endswith(".xlsx")
