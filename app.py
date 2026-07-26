@@ -53,13 +53,18 @@ st.sidebar.markdown("""
 """)
 
 # AVVISO REGOLA KEYWORDS BEN VISIBILE IN INTERFACCIA
-st.warning("📌 **REGOLA FONDAMENTALE KEYWORDS**: Separa ogni parola chiave con una **virgola (`,`)**. Ciascun termine o frase separata da virgola verrà ricercato autonomamente su tutte le 8 banche dati regolatorie (es. `mammography, web based viewer, PACS`).")
+st.warning("📌 **REGOLA FONDAMENTALE KEYWORDS**: Separa ogni parola chiave con una **virgola (`,`)**. Ciascun termine o frase separata da virgola verrà ricercato autonomamente su tutte le 8 banche dati regolatorie (es. `DICOM VIEWER, PACS, mammography`).")
 
-search_keyword = st.text_input("🔍 Inserisci Keyword(s) per SaMD / Dispositivi Medici (separate da virgola):", "mammography, web based viewer")
+search_keyword = st.text_input(
+    label="🔍 Inserisci Keyword(s) per SaMD / Dispositivi Medici (separate da virgola):",
+    value="",  # REQUISITO: Campo di ricerca pulito (vuoto) all'avvio
+    placeholder="Es. DICOM VIEWER, PACS, mammography, web based viewer...",
+    help="Inserisci i termini di ricerca per il dispositivo SaMD o la classe di software da monitorare."
+)
 
 if st.button("🚀 Avvia Analisi Post-Market Surveillance (DPR-385)", type="primary"):
     if not search_keyword.strip():
-        st.warning("Inserisci almeno una keyword valida.")
+        st.warning("⚠️ Inserisci almeno una parola chiave valida prima di avviare la ricerca.")
     else:
         with st.spinner("Esecuzione ricerca indipendente per ogni keyword su tutte le 8 fonti..."):
             orchestrator = PMSOrchestrator()
