@@ -109,20 +109,31 @@ class ExcelGenerator:
             ws.cell(row=current_row, column=1, value=idx)
             ws.cell(row=current_row, column=2, value=f'"{kw}"')
             
+            # Filtro record relativi alla keyword specifica
+            if len(keywords_list) > 1:
+                kw_recs = [
+                    r for r in records
+                    if r.get("searched_keyword", r.get("keyword", kw)).lower() == kw.lower()
+                ]
+            else:
+                kw_recs = records
+
             c_offset = 3
             for src in self.SOURCES_KEYS:
-                src_recs = [r for r in records if self._match_source(r.get("fonte", ""), src)]
+                src_recs = [r for r in kw_recs if self._match_source(r.get("fonte", ""), src)]
                 tot_count = len(src_recs)
+                dupl_count = sum(1 for r in src_recs if r.get("is_duplicate", False))
+                sel_count = tot_count - dupl_count
                 
-                # Rows Tot, Dupl, Sel
+                # Righe Tot, Dupl, Sel
                 ws.cell(row=current_row, column=c_offset, value="Tot:")
                 ws.cell(row=current_row, column=c_offset+1, value=tot_count)
                 
                 ws.cell(row=current_row+1, column=c_offset, value="Dupl:")
-                ws.cell(row=current_row+1, column=c_offset+1, value=0)
+                ws.cell(row=current_row+1, column=c_offset+1, value=dupl_count)
                 
                 ws.cell(row=current_row+2, column=c_offset, value="Sel:")
-                ws.cell(row=current_row+2, column=c_offset+1, value=tot_count)
+                ws.cell(row=current_row+2, column=c_offset+1, value=sel_count)
 
                 c_offset += 2
 

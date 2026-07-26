@@ -17,6 +17,7 @@ from scrapers.mhra import MHRAScraper
 from core.deduplicator import Deduplicator
 from core.nlp_tagger import NLPTagger
 from core.excel_generator import ExcelGenerator
+from core.keyword_parser import KeywordParser
 
 logging.basicConfig(
     level=logging.INFO,
@@ -67,15 +68,122 @@ class PMSOrchestrator:
             return records
         filtered = []
         for r in records:
-            d_str = r.get("data_pubblicazione", "")
+            d_str = r.get("data_pubblicazione", r.get("data", ""))
             try:
-                dt = datetime.strptime(d_str, "%d/%m/%Y").date()
-                if start_date and dt < start_date: continue
-                if end_date and dt > end_date: continue
+                dt = None
+                for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%Y/%m/%d"):
+                    try:
+                        dt = datetime.strptime(d_str, fmt).date()
+                        break
+                    except ValueError:
+                        continue
+                if dt:
+                    if start_date and dt < start_date: continue
+                    if end_date and dt > end_date: continue
                 filtered.append(r)
             except Exception:
                 filtered.append(r)
         return filtered
+
+    def run_pipeline(
+        self,
+        keyword_input: str,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        competitors: Optional[List[str]] = None,
+        custom_output_path: Optional[str] = None
+    ) -> Dict[str, Any]:
+        keywords = KeywordParser.parse(keyword_input)
+        if not keywords:
+            keywords = ["mammography"]
+
+        dt_start = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
+        dt_end = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
+
+        if dt_start and dt_end:
+            period_str = f"Period_{dt_start.strftime('%Y-%m-%d')}_to_{dt_end.strftime('%Y-%m-%d')}"
+            default_file = f"PMS_Report_DPR-385_{period_str}.xlsx"
+        elif dt_start:
+            period_str = f"from_{dt_start.strftime('%Y-%m-%d')}"
+            default_file = f"PMS_Report_DPR-385_{period_str}.xlsx"
+        else:
+            period_str = "All_Time"
+            default_file = "PMS_Report_DPR-385_All_Time.xlsx"
+
+        output_file = custom_output_path or default_file
+        comp_list = competitors if competitors is not None else self.config.get("competitors", [])
+
+        logger.info(f"=== INIZIO PIPELINE PMS PER KEYWORDS: {keywords} [{period_str}] ===")
+
+        all_records: List[Dict[str, Any]] = []
+        keyword_stats: Dict[str, Any] = {}
+
+        for kw in keywords:
+            kw_raw: List[Dict[str, Any]] = []
+            scrapers_calls = [
+                ("Minister of Health", lambda: self.min_salute_scraper.fetch_data(kw)),
+                ("MAUDE", lambda: self.openfda_scraper.fetch_events(kw)),
+                ("MD Recalls (FDA)", lambda: self.fda_recalls_scraper.fetch_recalls(kw)),
+                ("Safety Communication (FDA)", lambda: self.fda_safety_comm_scraper.fetch_communications(kw)),
+                ("Letters to Health Care Providers (FDA)", lambda: self.fda_letters_scraper.fetch_letters(kw)),
+                ("National Vulnerability Database (NVD)", lambda: self.nvd_scraper.fetch_vulnerabilities(kw)),
+                ("BfArM", lambda: self.bfarm_scraper.fetch_notices(kw)),
+                ("MHRA", lambda: self.mhra_scraper.fetch_alerts(kw)),
+            ]
+
+            for src_name, call in scrapers_calls:
+                try:
+                    recs = call()
+                    for r in recs:
+                        r["searched_keyword"] = kw
+                    kw_raw.extend(recs)
+                except Exception as e:
+                    logger.error(f"Errore {src_name} per kw '{kw}': {e}")
+
+            if dt_start or dt_end:
+                kw_raw = self._filter_by_date_range(kw_raw, dt_start, dt_end)
+
+            kw_unique = self.deduplicator.process(kw_raw)
+            kw_tagged = self.nlp_tagger.process_records(kw_unique, competitors=comp_list)
+            
+            all_records.extend(kw_tagged)
+
+            # Contatori per stat
+            src_counts = {}
+            excel_gen = ExcelGenerator()
+            for src_key in ExcelGenerator.SOURCES_KEYS:
+                cnt = sum(1 for r in kw_tagged if excel_gen._match_source(r.get("fonte", ""), src_key))
+                src_counts[src_key] = {"Tot": cnt, "Dupl": 0, "Sel": cnt}
+
+            keyword_stats[kw] = {
+                "total_records": len(kw_tagged),
+                "sources_breakdown": src_counts
+            }
+
+        # Deduplicazione complessiva per il report finale
+        final_records = self.deduplicator.process(all_records)
+
+        excel_gen = ExcelGenerator(file_path=output_file)
+        final_file = excel_gen.generate(
+            records=final_records,
+            target_device=", ".join(keywords),
+            search_period=period_str.replace("_", " "),
+            keywords_list=keywords
+        )
+
+        high_risk_count = sum(1 for r in final_records if "cybersecurity" in str(r.get("tipologia", "")).lower() or "vulnerability" in str(r.get("fonte", "")).lower())
+        risk_level = "ALTO" if high_risk_count > 5 else ("MEDIO" if high_risk_count > 0 else "BASSO")
+
+        return {
+            "excel_filename": final_file,
+            "keywords": keywords,
+            "total_selected": len(final_records),
+            "signal_metrics": {
+                "high_severity_incidents": high_risk_count,
+                "overall_risk_level": risk_level
+            },
+            "keyword_stats": keyword_stats
+        }
 
     def run(
         self,
@@ -86,57 +194,17 @@ class PMSOrchestrator:
         end_date: Optional[date] = None
     ) -> str:
         term = search_term or self.config.get("search_keyword", "mammography")
-        comp_list = competitors if competitors is not None else self.config.get("competitors", [])
-
-        # Generazione nome file dinamico con periodo temporale
-        if start_date and end_date:
-            period_str = f"from {start_date.strftime('%d-%m-%Y')} to {end_date.strftime('%d-%m-%Y')}"
-            default_file = f"PMS_Report_DPR-385_{start_date.strftime('%Y-%m-%d')}_to_{end_date.strftime('%Y-%m-%d')}.xlsx"
-        elif start_date:
-            period_str = f"from {start_date.strftime('%d-%m-%Y')}"
-            default_file = f"PMS_Report_DPR-385_from_{start_date.strftime('%Y-%m-%d')}.xlsx"
-        else:
-            period_str = "All Available Data"
-            default_file = self.output_excel_path if hasattr(self, "output_excel_path") and self.output_excel_path else "PMS_Report_DPR-385_All_Time.xlsx"
-
-        output_file = custom_output_path or default_file
-
-        logger.info(f"=== INIZIO PIPELINE PMS (8 FONTI) PER: '{term}' [{period_str}] ===")
-        all_raw_records: List[Dict[str, Any]] = []
-
-        scrapers_calls = [
-            ("Ministero Salute", lambda: self.min_salute_scraper.fetch_data(term)),
-            ("openFDA MAUDE", lambda: self.openfda_scraper.fetch_events(term)),
-            ("FDA Recalls", lambda: self.fda_recalls_scraper.fetch_recalls(term)),
-            ("FDA Safety Comm", lambda: self.fda_safety_comm_scraper.fetch_communications(term)),
-            ("FDA Letters", lambda: self.fda_letters_scraper.fetch_letters(term)),
-            ("NVD Cybersecurity", lambda: self.nvd_scraper.fetch_vulnerabilities(term)),
-            ("BfArM", lambda: self.bfarm_scraper.fetch_notices(term)),
-            ("MHRA", lambda: self.mhra_scraper.fetch_alerts(term)),
-        ]
-
-        for name, call in scrapers_calls:
-            try:
-                all_raw_records.extend(call())
-            except Exception as e:
-                logger.error(f"Errore {name}: {e}")
-
-        if start_date or end_date:
-            all_raw_records = self._filter_by_date_range(all_raw_records, start_date, end_date)
-
-        unique_records = self.deduplicator.process(all_raw_records)
-        tagged_records = self.nlp_tagger.process_records(unique_records, competitors=comp_list)
+        s_date = start_date.strftime("%Y-%m-%d") if start_date else None
+        e_date = end_date.strftime("%Y-%m-%d") if end_date else None
         
-        excel_gen = ExcelGenerator(file_path=output_file)
-        final_file = excel_gen.generate(
-            records=tagged_records,
-            target_device=term,
-            search_period=period_str,
-            keywords_list=[term]
+        res = self.run_pipeline(
+            keyword_input=term,
+            start_date=s_date,
+            end_date=e_date,
+            competitors=competitors,
+            custom_output_path=custom_output_path
         )
-        
-        logger.info(f"=== PIPELINE COMPLETATA! Report salvato in: {final_file} ===")
-        return final_file
+        return res["excel_filename"]
 
 
 def parse_arguments():

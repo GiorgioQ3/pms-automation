@@ -133,3 +133,10 @@
 2026-07-26 11:46:46,056 - [ERROR] - scrapers.bfarm - [BfArM] Errore imprevisto durante la chiamata: ('Connection aborted.', ConnectionResetError(10054, "Connessione in corso interrotta forzatamente dall'host remoto", None, 10054, None))
 2026-07-26 11:46:47,202 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_MDR_2017_745.xlsx
 2026-07-26 11:46:47,203 - [INFO] - PMSPipeline - === PIPELINE COMPLETATA! Report salvato in: PMS_Report_MDR_2017_745.xlsx ===
+2026-07-26 11:50:23,229 - [INFO] - PMSPipeline - === INIZIO PIPELINE PMS (8 FONTI) PER: 'mammography, "web based viewer" "diagnostic imaging/image viewer"   "DICOM viewer"   "digital pathology viewer"   "HTML5 viewer"   “O3IMS.View”' [from 28-03-2026 to 26-07-2026] ===
+2026-07-26 11:50:24,337 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 11:50:25,798 - [WARNING] - scrapers.openfda_maude - [openFDA] Risposta non corretta dalla fonte API (HTTP 400).
+2026-07-26 11:50:27,192 - [WARNING] - scrapers.fda_recalls - [FDA Recalls] Risposta non corretta dall'API (HTTP 400).
+2026-07-26 11:50:30,684 - [ERROR] - scrapers.bfarm - [BfArM] Errore imprevisto durante la chiamata: ('Connection aborted.', ConnectionResetError(10054, "Connessione in corso interrotta forzatamente dall'host remoto", None, 10054, None))
+2026-07-26 11:50:31,525 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_MDR_2017_745.xlsx
+2026-07-26 11:50:31,526 - [INFO] - PMSPipeline - === PIPELINE COMPLETATA! Report salvato in: PMS_Report_MDR_2017_745.xlsx ===

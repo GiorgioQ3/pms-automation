@@ -55,6 +55,26 @@ def test_orchestrator_pipeline_success(orchestrator):
         assert result_file.endswith(".xlsx")
 
 
+def test_orchestrator_run_pipeline_multi_keyword(orchestrator):
+    with patch.object(orchestrator.min_salute_scraper, 'fetch_data', return_value=[]), \
+         patch.object(orchestrator.openfda_scraper, 'fetch_events', return_value=[]), \
+         patch.object(orchestrator.fda_recalls_scraper, 'fetch_recalls', return_value=[]), \
+         patch.object(orchestrator.fda_safety_comm_scraper, 'fetch_communications', return_value=[]), \
+         patch.object(orchestrator.fda_letters_scraper, 'fetch_letters', return_value=[]), \
+         patch.object(orchestrator.nvd_scraper, 'fetch_vulnerabilities', return_value=[]), \
+         patch.object(orchestrator.bfarm_scraper, 'fetch_notices', return_value=[]), \
+         patch.object(orchestrator.mhra_scraper, 'fetch_alerts', return_value=[]):
+
+        res = orchestrator.run_pipeline(
+            keyword_input="mammography, web based viewer",
+            start_date="2024-01-01",
+            end_date="2024-12-31"
+        )
+        assert res["excel_filename"] == "PMS_Report_DPR-385_Period_2024-01-01_to_2024-12-31.xlsx"
+        assert res["keywords"] == ["mammography", "web based viewer"]
+        assert "keyword_stats" in res
+
+
 def test_orchestrator_failsafe_empty_sources(orchestrator):
     with patch.object(orchestrator.min_salute_scraper, 'fetch_data', return_value=[]), \
          patch.object(orchestrator.openfda_scraper, 'fetch_events', return_value=[]), \
@@ -84,7 +104,7 @@ def test_orchestrator_date_range_naming(orchestrator):
             start_date=date(2024, 1, 1),
             end_date=date(2024, 12, 31)
         )
-        assert "PMS_Report_DPR-385_2024-01-01_to_2024-12-31.xlsx" in result_file
+        assert "PMS_Report_DPR-385_Period_2024-01-01_to_2024-12-31.xlsx" in result_file
 
 
 def test_orchestrator_config_loading(tmp_path):
