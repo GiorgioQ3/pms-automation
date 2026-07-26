@@ -35,3 +35,11 @@ def normalizza_data(data_str: str | None) -> str | None:
             continue
 
     return None
+
+
+class DateNormalizer:
+    """Classe normalizzatrice per la conversione e formattazione di date."""
+
+    @staticmethod
+    def normalize(data_str: str | None) -> str | None:
+        return normalizza_data(data_str)

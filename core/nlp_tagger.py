@@ -65,27 +65,25 @@ def assegna_tag(testo_avviso: str | None) -> str:
 class NLPTagger:
     """Tagger NLP per la categorizzazione degli eventi e analisi dei competitor."""
 
+    def __init__(self, competitors: list[str] = None):
+        self.competitors = competitors or []
+
+    def tag_record(self, record: dict) -> dict:
+        rec_copy = dict(record)
+        testo = rec_copy.get("descrizione_evento") or rec_copy.get("titolo") or rec_copy.get("dispositivo") or ""
+        if not rec_copy.get("tag"):
+            rec_copy["tag"] = assegna_tag(testo)
+
+        fabbricante = str(rec_copy.get("fabbricante", "")).lower()
+        rec_copy["is_competitor"] = any(
+            comp.lower() in fabbricante for comp in self.competitors if comp
+        )
+        rec_copy["tag_competitor"] = rec_copy.get("tag_competitor", "Competitor" if rec_copy["is_competitor"] else "N/A")
+        return rec_copy
+
     def process_records(
         self, records: list[dict], competitors: list[str] = None
     ) -> list[dict]:
-        """Categorizza i record e aggiunge flag relativi ai competitor."""
-        if competitors is None:
-            competitors = []
-
-        processed = []
-        for rec in records:
-            rec_copy = dict(rec)
-            testo = rec_copy.get("descrizione_evento") or rec_copy.get("titolo") or ""
-
-            if not rec_copy.get("tag"):
-                rec_copy["tag"] = assegna_tag(testo)
-
-            fabbricante = str(rec_copy.get("fabbricante", "")).lower()
-            rec_copy["is_competitor"] = any(
-                comp.lower() in fabbricante for comp in competitors if comp
-            )
-
-            processed.append(rec_copy)
-
-        return processed
-
+        comps = competitors if competitors is not None else self.competitors
+        tagger = NLPTagger(competitors=comps)
+        return [tagger.tag_record(rec) for rec in records]

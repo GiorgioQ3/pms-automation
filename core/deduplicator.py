@@ -1,7 +1,8 @@
 import json
 import logging
+import hashlib
 from pathlib import Path
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -46,13 +47,6 @@ def filtra_nuovi(
     path_storico: str,
     chiave_id: str = "link_documento"
 ) -> List[Dict[str, Any]]:
-    """
-    - Carica lo storico dal file JSON.
-    - Filtra la lista risultati mantenendo SOLO gli elementi la cui chiave_id NON è presente nello storico.
-    - Aggiorna lo storico aggiungendo le chiavi di TUTTI i risultati analizzati in questa esecuzione.
-    - Salva lo storico aggiornato nel file JSON.
-    - Restituisce la lista dei soli elementi nuovi.
-    """
     storico = carica_storico(path_storico)
     nuovi_risultati = []
 
@@ -68,6 +62,29 @@ def filtra_nuovi(
     return nuovi_risultati
 
 
+class SHA256Deduplicator:
+    """Deduplicatore basato su calcolo hash SHA-256."""
+
+    def __init__(self, path_storico: str = "pms_history.json"):
+        self.path_storico = path_storico
+        self.seen_hashes: Set[str] = carica_storico(path_storico)
+
+    def is_duplicate(self, record: Dict[str, Any]) -> Tuple[bool, str]:
+        rec_id = record.get("id_segnalazione") or record.get("id") or record.get("link_documento") or record.get("url_fonte")
+        if not rec_id:
+            rec_bytes = json.dumps(record, sort_keys=True).encode("utf-8")
+            hash_id = hashlib.sha256(rec_bytes).hexdigest()
+        else:
+            hash_id = hashlib.sha256(str(rec_id).encode("utf-8")).hexdigest()
+
+        if hash_id in self.seen_hashes:
+            return True, hash_id
+        
+        self.seen_hashes.add(hash_id)
+        salva_storico(self.path_storico, self.seen_hashes)
+        return False, hash_id
+
+
 class Deduplicator:
     """Gestore deduplicazione basato su SHA-256 e storico."""
 
@@ -76,12 +93,11 @@ class Deduplicator:
 
     def process(self, records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Deduplica la lista di record calcolando un hash SHA-256 e salvandolo nello storico."""
-        import hashlib
         storico = carica_storico(self.path_storico)
         unique_records = []
 
         for rec in records:
-            rec_id = rec.get("id_segnalazione") or rec.get("link_documento") or rec.get("url_fonte")
+            rec_id = rec.get("id_segnalazione") or rec.get("id") or rec.get("link_documento") or rec.get("url_fonte")
             if not rec_id:
                 rec_bytes = json.dumps(rec, sort_keys=True).encode("utf-8")
                 hash_id = hashlib.sha256(rec_bytes).hexdigest()
@@ -94,4 +110,3 @@ class Deduplicator:
 
         salva_storico(self.path_storico, storico)
         return unique_records
-
