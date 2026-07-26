@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock, patch
+from datetime import date
 import pytest
 from main import PMSOrchestrator, parse_arguments
 
@@ -44,6 +45,8 @@ def test_orchestrator_pipeline_success(orchestrator):
     with patch.object(orchestrator.min_salute_scraper, 'fetch_data', return_value=mock_it_data), \
          patch.object(orchestrator.openfda_scraper, 'fetch_events', return_value=mock_fda_data), \
          patch.object(orchestrator.fda_recalls_scraper, 'fetch_recalls', return_value=[]), \
+         patch.object(orchestrator.fda_safety_comm_scraper, 'fetch_communications', return_value=[]), \
+         patch.object(orchestrator.fda_letters_scraper, 'fetch_letters', return_value=[]), \
          patch.object(orchestrator.nvd_scraper, 'fetch_vulnerabilities', return_value=[]), \
          patch.object(orchestrator.bfarm_scraper, 'fetch_notices', return_value=[]), \
          patch.object(orchestrator.mhra_scraper, 'fetch_alerts', return_value=[]):
@@ -56,12 +59,32 @@ def test_orchestrator_failsafe_empty_sources(orchestrator):
     with patch.object(orchestrator.min_salute_scraper, 'fetch_data', return_value=[]), \
          patch.object(orchestrator.openfda_scraper, 'fetch_events', return_value=[]), \
          patch.object(orchestrator.fda_recalls_scraper, 'fetch_recalls', return_value=[]), \
+         patch.object(orchestrator.fda_safety_comm_scraper, 'fetch_communications', return_value=[]), \
+         patch.object(orchestrator.fda_letters_scraper, 'fetch_letters', return_value=[]), \
          patch.object(orchestrator.nvd_scraper, 'fetch_vulnerabilities', return_value=[]), \
          patch.object(orchestrator.bfarm_scraper, 'fetch_notices', return_value=[]), \
          patch.object(orchestrator.mhra_scraper, 'fetch_alerts', return_value=[]):
 
         result_file = orchestrator.run(search_term="Inesistente", competitors=[])
         assert result_file.endswith(".xlsx")
+
+
+def test_orchestrator_date_range_naming(orchestrator):
+    with patch.object(orchestrator.min_salute_scraper, 'fetch_data', return_value=[]), \
+         patch.object(orchestrator.openfda_scraper, 'fetch_events', return_value=[]), \
+         patch.object(orchestrator.fda_recalls_scraper, 'fetch_recalls', return_value=[]), \
+         patch.object(orchestrator.fda_safety_comm_scraper, 'fetch_communications', return_value=[]), \
+         patch.object(orchestrator.fda_letters_scraper, 'fetch_letters', return_value=[]), \
+         patch.object(orchestrator.nvd_scraper, 'fetch_vulnerabilities', return_value=[]), \
+         patch.object(orchestrator.bfarm_scraper, 'fetch_notices', return_value=[]), \
+         patch.object(orchestrator.mhra_scraper, 'fetch_alerts', return_value=[]):
+
+        result_file = orchestrator.run(
+            search_term="Software",
+            start_date=date(2024, 1, 1),
+            end_date=date(2024, 12, 31)
+        )
+        assert "PMS_Report_DPR-385_2024-01-01_to_2024-12-31.xlsx" in result_file
 
 
 def test_orchestrator_config_loading(tmp_path):

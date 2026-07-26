@@ -81,10 +81,12 @@ def main():
 
     st.sidebar.divider()
     st.sidebar.info("""
-    📌 **6 Fonti Integrate**:
+    📌 **8 Fonti Integrate**:
     - 🇮🇹 Ministero della Salute
     - 🇺🇸 openFDA MAUDE
     - 🇺🇸 openFDA Recalls
+    - 🇺🇸 FDA Safety Communications
+    - 🇺🇸 FDA Letters to Health Care Providers
     - 🌐 NIST NVD Cybersecurity
     - 🇩🇪 BfArM (Germania)
     - 🇬🇧 MHRA (Regno Unito)

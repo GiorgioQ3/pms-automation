@@ -13,3 +13,4 @@
 - [x] Step 12: Connettori FDA Recalls (`scrapers/fda_recalls.py`), NIST NVD Cybersecurity (`scrapers/nvd_cybersecurity.py`) per SaMD MDCG 2019-16, aggiornamento `config.json` con dominio mammografia e 50 test unitari passing.
 - [x] Step 13: Connettori BfArM Germania (`scrapers/bfarm.py`) e MHRA Regno Unito (`scrapers/mhra.py`), estensione orchestratore a 6 sorgenti regolatorie e 56 test unitari passing.
 - [x] Step 14: Interfaccia Grafica Web Dashboard Streamlit (`app.py`), gestione interattiva 6 fonti regolatorie, audit log viewer e export Excel.
+- [x] Step 15: Template protocollo DPR-385 PSUR Worksheet (`core/excel_generator.py`), connettori FDA Safety Communications (`scrapers/fda_safety_communications.py`) e FDA Letters (`scrapers/fda_letters.py`) per 8 fonti regolatorie totali, calcolo data range nel nome file e 62 test unitari passing.

@@ -1,50 +1,69 @@
 import pytest
 from pathlib import Path
 import openpyxl
-from core.excel_generator import genera_excel_report
+from core.excel_generator import ExcelGenerator, genera_excel_report
 
 
-def test_genera_excel_report_dati_validi(tmp_path: Path):
-    output_file = tmp_path / "subfolder" / "report_test.xlsx"
-    dati = [
+def test_excel_generator_dpr385_structure(tmp_path: Path):
+    output_file = tmp_path / "report_dpr385_test.xlsx"
+    records = [
         {
-            "fonte": "MDR",
-            "data": "2026-05-15",
-            "titolo": "Regolamento Dispositivi Medici",
-            "tag": "dispositivi medici, sicurezza",
-            "link_documento": "https://example.com/mdr",
-            "stato_fonte": "OK"
+            "fonte": "Safety Communication (FDA)",
+            "id_segnalazione": "FDA-001",
+            "data_pubblicazione": "15/03/2024",
+            "fabbricante": "ACME Med",
+            "dispositivo": "Mammography AI",
+            "descrizione_evento": "Safety alert details",
+            "tipologia": "Safety Communication",
+            "tag_competitor": "Competitor A",
+            "url_fonte": "https://example.com/fda1"
         },
         {
-            "fonte": "FDA",
-            "data": "2026-06-20",
-            "titolo": "Guidance Document",
-            "tag": "fda, guidanza",
-            "link_documento": "https://example.com/fda",
-            "stato_fonte": "OK"
+            "fonte": "Letters to Health Care Providers (FDA)",
+            "id_segnalazione": "FDA-002",
+            "data_pubblicazione": "10/01/2024",
+            "fabbricante": "Siemens",
+            "dispositivo": "CAD Software",
+            "descrizione_evento": "Letter details",
+            "tipologia": "Letter to Health Care Providers",
+            "tag_competitor": "Siemens",
+            "url_fonte": "https://example.com/fda2"
         }
     ]
 
-    res_path = genera_excel_report(dati, str(output_file))
+    generator = ExcelGenerator(file_path=str(output_file))
+    res_path = generator.generate(
+        records=records,
+        target_device="mammography",
+        search_period="01/01/2024 to 31/12/2024",
+        keywords_list=["mammography"]
+    )
     assert Path(res_path).exists()
 
     wb = openpyxl.load_workbook(output_file)
-    assert "Report PMS" in wb.sheetnames
-    ws = wb["Report PMS"]
+    assert "Frontpage" in wb.sheetnames
+    assert "PSUR_Summary" in wb.sheetnames
+    assert "Dettaglio_Incidenti" in wb.sheetnames
 
-    # Verifica intestazioni (riga 1)
-    headers = [cell.value for cell in ws[1]]
-    assert headers[:6] == ["fonte", "data", "titolo", "tag", "link_documento", "stato_fonte"]
+    # Check Frontpage
+    ws_front = wb["Frontpage"]
+    assert ws_front["B2"].value == "DPR-385 PSUR Worksheet"
+    assert ws_front["B4"].value == "01/01/2024 to 31/12/2024"
 
-    # Verifica righe di dati (riga 2 e riga 3)
-    assert ws.cell(row=2, column=1).value == "MDR"
-    assert ws.cell(row=3, column=1).value == "FDA"
+    # Check PSUR_Summary
+    ws_sum = wb["PSUR_Summary"]
+    assert ws_sum.cell(row=1, column=1).value == "ID"
+    assert ws_sum.cell(row=1, column=2).value == "Keywords"
 
-    # Verifica hyperlink
-    cell_link = ws.cell(row=2, column=5)
-    assert cell_link.value == "https://example.com/mdr"
-    assert cell_link.hyperlink is not None
-    assert cell_link.hyperlink.target == "https://example.com/mdr"
+    # Check Dettaglio_Incidenti
+    ws_det = wb["Dettaglio_Incidenti"]
+    headers = [ws_det.cell(row=1, column=c).value for c in range(1, 10)]
+    assert headers == [
+        "Fonte", "ID Segnalazione", "Data Pubblicazione", "Fabbricante",
+        "Dispositivo", "Descrizione Evento", "Tipologia", "Tag Competitor", "URL Fonte"
+    ]
+    assert ws_det.cell(row=2, column=1).value == "Safety Communication (FDA)"
+    assert ws_det.cell(row=2, column=9).hyperlink is not None
 
 
 def test_genera_excel_report_dati_vuoti(tmp_path: Path):
@@ -55,32 +74,6 @@ def test_genera_excel_report_dati_vuoti(tmp_path: Path):
     assert Path(res_path).exists()
 
     wb = openpyxl.load_workbook(output_file)
-    ws = wb.active
-
-    # Deve contenere solo la riga delle intestazioni
-    headers = [cell.value for cell in ws[1]]
-    assert headers == ["fonte", "data", "titolo", "tag", "link_documento", "stato_fonte"]
-    assert ws.max_row == 1
-
-
-def test_genera_excel_report_campi_extra(tmp_path: Path):
-    output_file = tmp_path / "report_extra.xlsx"
-    dati = [
-        {
-            "fonte": "EMA",
-            "data": "2026-01-10",
-            "titolo": "Report EMA",
-            "tag": "ema",
-            "link_documento": "https://example.com/ema",
-            "stato_fonte": "OK",
-            "campo_extra": "Valore Extra"
-        }
-    ]
-
-    genera_excel_report(dati, str(output_file))
-    wb = openpyxl.load_workbook(output_file)
-    ws = wb.active
-
-    headers = [cell.value for cell in ws[1]]
-    assert "campo_extra" in headers
-    assert ws.cell(row=2, column=headers.index("campo_extra") + 1).value == "Valore Extra"
+    assert "Frontpage" in wb.sheetnames
+    assert "PSUR_Summary" in wb.sheetnames
+    assert "Dettaglio_Incidenti" in wb.sheetnames

@@ -128,3 +128,8 @@
 2026-07-25 16:00:24,017 - [INFO] - core.excel_generator - Report Excel generato con successo in C:\Users\giorg\OneDrive\Desktop\pms-automation\PMS_Report_MDR_2017_745.xlsx
 2026-07-25 16:00:24,018 - [INFO] - PMSPipeline - === PIPELINE COMPLETATA! Report salvato in: PMS_Report_MDR_2017_745.xlsx ===
 2026-07-26 11:17:14,581 - [INFO] - PMSPipeline - Configurazione caricata con successo da 'config.json'.
+2026-07-26 11:46:38,323 - [INFO] - PMSPipeline - === INIZIO PIPELINE PMS (8 FONTI) PER: 'mammography' [All Available Data] ===
+2026-07-26 11:46:39,297 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 11:46:46,056 - [ERROR] - scrapers.bfarm - [BfArM] Errore imprevisto durante la chiamata: ('Connection aborted.', ConnectionResetError(10054, "Connessione in corso interrotta forzatamente dall'host remoto", None, 10054, None))
+2026-07-26 11:46:47,202 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_MDR_2017_745.xlsx
+2026-07-26 11:46:47,203 - [INFO] - PMSPipeline - === PIPELINE COMPLETATA! Report salvato in: PMS_Report_MDR_2017_745.xlsx ===
