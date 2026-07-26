@@ -20,6 +20,12 @@ class FDARecallsScraper:
 
         try:
             response = requests.get(self.BASE_URL, params=params, timeout=self.timeout)
+
+            # openFDA restituisce HTTP 404 quando non ci sono match
+            if response.status_code == 404:
+                logger.info(f"[FDA Recalls] Nessun record trovato (HTTP 404) per keyword '{search_term}'.")
+                return []
+
             if response.status_code != 200:
                 logger.warning(f"[FDA Recalls] Risposta non corretta dall'API (HTTP {response.status_code}).")
                 return []

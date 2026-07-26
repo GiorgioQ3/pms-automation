@@ -51,6 +51,16 @@ def test_fetch_events_success(scraper):
         assert item["tipologia"] == "Malfunction"
 
 
+def test_fetch_events_404_not_found(scraper):
+    with patch("scrapers.openfda_maude.requests.get") as mock_get:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 404
+        mock_get.return_value = mock_resp
+
+        results = scraper.fetch_events("Inesistente")
+        assert results == []
+
+
 def test_fetch_events_http_error(scraper):
     with patch("scrapers.openfda_maude.requests.get") as mock_get:
         mock_resp = MagicMock()

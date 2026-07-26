@@ -1,5 +1,11 @@
+"""
+Connettore openFDA MAUDE (Eventi Avversi Dispositivi Medici USA).
+Interroga le API REST ufficiali di openFDA per eventi avversi.
+Note API openFDA: Il codice HTTP 404 viene restituito quando la ricerca produce 0 risultati.
+"""
+
 import logging
-from typing import Dict, List, Any, Optional
+from typing import List, Dict, Any, Optional
 import requests
 from core.date_normalizer import normalizza_data as normalize_date
 
@@ -7,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class OpenFDAMaudeScraper:
-    """Connettore Failsafe per l'API openFDA Medical Device Adverse Events (MAUDE)."""
+    """Scraper per il database openFDA MAUDE (Eventi Avversi Dispositivi Medici USA)."""
 
     BASE_URL = "https://api.fda.gov/device/event.json"
 
@@ -15,20 +21,30 @@ class OpenFDAMaudeScraper:
         self.timeout = timeout
 
     def fetch_events(
-        self, search_term: str, limit: int = 10
+        self, search_term: str, limit: int = 10, start_date: str = None, end_date: str = None
     ) -> List[Dict[str, Any]]:
-        query = f'device.brand_name:"{search_term}"'
+        """
+        Esegue la ricerca su openFDA MAUDE per la keyword specificata.
+        Gestisce HTTP 404 come esito a 0 risultati trovati (log INFO anziché WARNING).
+        """
+        query = f'device.brand_name:"{search_term}" OR device.generic_name:"{search_term}" OR mdr_text.text:"{search_term}"'
+        if start_date and end_date:
+            f_start = start_date.replace("-", "")
+            f_end = end_date.replace("-", "")
+            query = f'({query}) AND date_received:[{f_start} TO {f_end}]'
+
         params = {"search": query, "limit": limit}
 
         try:
-            response = requests.get(
-                self.BASE_URL, params=params, timeout=self.timeout
-            )
+            response = requests.get(self.BASE_URL, params=params, timeout=self.timeout)
+
+            # openFDA restituisce HTTP 404 quando non ci sono match
+            if response.status_code == 404:
+                logger.info(f"[openFDA MAUDE] Nessun record trovato (HTTP 404) per keyword '{search_term}'.")
+                return []
 
             if response.status_code != 200:
-                logger.warning(
-                    f"[openFDA] Risposta non corretta dalla fonte API (HTTP {response.status_code})."
-                )
+                logger.warning(f"[openFDA MAUDE] Risposta HTTP {response.status_code} dall'API openFDA.")
                 return []
 
             data = response.json()
@@ -43,16 +59,16 @@ class OpenFDAMaudeScraper:
             return normalized_records
 
         except Exception as e:
-            logger.error(
-                f"[openFDA] Errore imprevisto durante il recupero dei dati: {e}"
-            )
+            logger.error(f"[openFDA MAUDE] Errore imprevisto durante il recupero dei dati: {e}")
             return []
+
+    def search(self, keyword: str, start_date: str = None, end_date: str = None) -> List[Dict[str, Any]]:
+        """Alias per retrocompatibilità e supporto interfaccia search."""
+        return self.fetch_events(search_term=keyword, start_date=start_date, end_date=end_date)
 
     def _parse_record(self, item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         try:
-            report_number = item.get(
-                "report_number", item.get("mdr_report_key", "N/A")
-            )
+            report_number = item.get("report_number", item.get("mdr_report_key", "N/A"))
 
             raw_date = item.get("date_received") or item.get("date_of_event") or ""
             if len(raw_date) == 8 and raw_date.isdigit():
@@ -66,12 +82,9 @@ class OpenFDAMaudeScraper:
 
             if devices and isinstance(devices, list):
                 first_dev = devices[0]
-                brand_name = first_dev.get(
-                    "brand_name", first_dev.get("generic_name", "N/A")
-                )
+                brand_name = first_dev.get("brand_name", first_dev.get("generic_name", "N/A"))
                 manufacturer = first_dev.get(
-                    "manufacturer_d_name",
-                    item.get("manufacturer_g1_name", "N/A"),
+                    "manufacturer_d_name", item.get("manufacturer_g1_name", "N/A")
                 )
 
             mdr_text = item.get("mdr_text", [])
@@ -86,12 +99,11 @@ class OpenFDAMaudeScraper:
                     desc = " | ".join(texts)
 
             event_type = item.get("event_type", "Adverse Event")
-
             mdr_key = item.get("mdr_report_key", "")
             url_fonte = (
                 f"https://accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id={mdr_key}"
                 if mdr_key
-                else "https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/search.cfm"
+                else f"https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id={report_number}"
             )
 
             return {
@@ -104,9 +116,6 @@ class OpenFDAMaudeScraper:
                 "tipologia": str(event_type).strip(),
                 "url_fonte": url_fonte,
             }
-
         except Exception as e:
-            logger.warning(
-                f"[openFDA] Errore durante il parsing del record: {e}"
-            )
+            logger.warning(f"[openFDA MAUDE] Errore durante il parsing del record: {e}")
             return None

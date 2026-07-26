@@ -33,6 +33,15 @@ def test_fetch_recalls_success(fda_recalls_scraper):
         assert "Mammography" in record["dispositivo"]
 
 
+def test_fetch_recalls_404_not_found(fda_recalls_scraper):
+    mock_response = MagicMock()
+    mock_response.status_code = 404
+
+    with patch("requests.get", return_value=mock_response):
+        records = fda_recalls_scraper.fetch_recalls("Inesistente")
+        assert records == []
+
+
 def test_fetch_recalls_http_error(fda_recalls_scraper):
     mock_response = MagicMock()
     mock_response.status_code = 500
