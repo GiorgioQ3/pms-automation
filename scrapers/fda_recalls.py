@@ -44,6 +44,9 @@ class FDARecallsScraper:
             logger.error(f"[FDA Recalls] Errore imprevisto durante il recupero dati: {e}")
             return []
 
+    def search(self, keyword: str, start_date: str = None, end_date: str = None) -> List[Dict[str, Any]]:
+        return self.fetch_recalls(search_term=keyword)
+
     def _parse_record(self, item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         try:
             recall_num = item.get("recall_number", "N/A")
@@ -55,16 +58,22 @@ class FDARecallsScraper:
             manufacturer = item.get("recalling_firm", "N/A")
             product = item.get("product_description", "N/A")
             reason = item.get("reason_for_recall", "N/A")
+            url = f"https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id={recall_num}"
 
             return {
                 "fonte": "FDA Device Recalls",
                 "id_segnalazione": str(recall_num),
+                "id": str(recall_num),
                 "data_pubblicazione": date_pub,
+                "data": date_pub,
                 "fabbricante": str(manufacturer).strip(),
                 "dispositivo": str(product)[:150].strip(),
                 "descrizione_evento": str(reason).strip(),
+                "titolo": str(product)[:150].strip(),
+                "title": str(product)[:150].strip(),
                 "tipologia": f"Medical Device Recall (Class {item.get('event_date_posted', '')})",
-                "url_fonte": f"https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id={recall_num}"
+                "url_fonte": url,
+                "url": url,
             }
         except Exception as e:
             logger.warning(f"[FDA Recalls] Errore durante il parsing del record: {e}")

@@ -25,7 +25,7 @@ class OpenFDAMaudeScraper:
     ) -> List[Dict[str, Any]]:
         """
         Esegue la ricerca su openFDA MAUDE per la keyword specificata.
-        Gestisce HTTP 404 come esito a 0 risultati trovati (log INFO anziché WARNING).
+        Gestisce HTTP 404 come esito a 0 risultati trovati.
         """
         query = f'device.brand_name:"{search_term}" OR device.generic_name:"{search_term}" OR mdr_text.text:"{search_term}"'
         if start_date and end_date:
@@ -106,15 +106,22 @@ class OpenFDAMaudeScraper:
                 else f"https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfmaude/detail.cfm?mdrfoi__id={report_number}"
             )
 
+            title_str = f"{brand_name} - {event_type}"
+
             return {
                 "fonte": "openFDA MAUDE",
                 "id_segnalazione": str(report_number),
+                "id": str(report_number),
                 "data_pubblicazione": date_pub,
+                "data": date_pub,
                 "fabbricante": str(manufacturer).strip(),
                 "dispositivo": str(brand_name).strip(),
                 "descrizione_evento": str(desc).strip(),
+                "titolo": title_str,
+                "title": title_str,
                 "tipologia": str(event_type).strip(),
                 "url_fonte": url_fonte,
+                "url": url_fonte,
             }
         except Exception as e:
             logger.warning(f"[openFDA MAUDE] Errore durante il parsing del record: {e}")

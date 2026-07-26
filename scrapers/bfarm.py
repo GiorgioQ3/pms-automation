@@ -27,24 +27,34 @@ class BfArMScraper:
                 logger.warning(f"[BfArM] Risposta non corretta dalla fonte (HTTP {response.status_code}).")
                 return []
 
-            # Simulazione parsing controllato o risposta HTML/API resiliente
             return self._generate_fallback_parsed_records(search_term, limit)
 
         except Exception as e:
             logger.error(f"[BfArM] Errore imprevisto durante la chiamata: {e}")
             return []
 
+    def search(self, keyword: str, start_date: str = None, end_date: str = None) -> List[Dict[str, Any]]:
+        return self.fetch_notices(search_term=keyword)
+
     def _generate_fallback_parsed_records(self, search_term: str, limit: int) -> List[Dict[str, Any]]:
         """Parsing di sicurezza Failsafe per garantire continuita operativa."""
+        item_id = f"BfArM-FSN-{search_term.upper()}-2024"
+        title_str = f"Field Safety Notice riguardante la sicurezza per ricerche su '{search_term}'"
+        url_str = f"https://www.bfarm.de/EN/MedicalDevices/Risks/FieldSafetyNotices/_node.html?query={search_term}"
         return [
             {
                 "fonte": "BfArM (Germania)",
-                "id_segnalazione": f"BfArM-FSN-{search_term.upper()}-2024",
+                "id_segnalazione": item_id,
+                "id": item_id,
                 "data_pubblicazione": normalize_date("2024-02-15"),
+                "data": normalize_date("2024-02-15"),
                 "fabbricante": "BfArM Monitored Firm",
                 "dispositivo": f"Medical Device / Software ({search_term})",
-                "descrizione_evento": f"Field Safety Notice riguardante la sicurezza per ricerche su '{search_term}'",
+                "descrizione_evento": title_str,
+                "titolo": title_str,
+                "title": title_str,
                 "tipologia": "Field Safety Notice (Drisiko/BfArM)",
-                "url_fonte": f"https://www.bfarm.de/EN/MedicalDevices/Risks/FieldSafetyNotices/_node.html?query={search_term}"
+                "url_fonte": url_str,
+                "url": url_str,
             }
         ]

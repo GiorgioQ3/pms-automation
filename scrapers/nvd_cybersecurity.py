@@ -37,10 +37,13 @@ class NVDCybersecurityScraper:
             logger.error(f"[NVD Cybersecurity] Errore imprevisto durante il recupero dati: {e}")
             return []
 
+    def search(self, keyword: str, start_date: str = None, end_date: str = None) -> List[Dict[str, Any]]:
+        return self.fetch_vulnerabilities(search_term=keyword)
+
     def _parse_record(self, cve: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         try:
             cve_id = cve.get("id", "N/A")
-            published = cve.get("published", "")[:10]  # Estratto AAAA-MM-GG
+            published = cve.get("published", "")[:10]
             date_pub = normalize_date(published)
 
             descriptions = cve.get("descriptions", [])
@@ -50,15 +53,22 @@ class NVDCybersecurityScraper:
                     desc = d.get("value", "N/A")
                     break
 
+            url_val = f"https://nvd.nist.gov/vuln/detail/{cve_id}"
+
             return {
-                "fonte": "NIST NVD (Cybersecurity CVE)",
+                "fonte": "National Vulnerability Database (NVD)",
                 "id_segnalazione": str(cve_id),
+                "id": str(cve_id),
                 "data_pubblicazione": date_pub,
+                "data": date_pub,
                 "fabbricante": "N/A (Software Vulnerability)",
                 "dispositivo": f"SaMD / Componente Software ({cve_id})",
                 "descrizione_evento": str(desc).strip(),
+                "titolo": f"Vulnerabilità CVE {cve_id}",
+                "title": f"Vulnerabilità CVE {cve_id}",
                 "tipologia": "Cybersecurity Vulnerability (MDCG 2019-16)",
-                "url_fonte": f"https://nvd.nist.gov/vuln/detail/{cve_id}"
+                "url_fonte": url_val,
+                "url": url_val,
             }
         except Exception as e:
             logger.warning(f"[NVD Cybersecurity] Errore durante il parsing del record: {e}")

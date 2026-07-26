@@ -18,19 +18,6 @@ AVVISI_URL = "https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiD
 
 
 def fetch_ministero_salute(limit: int = 10) -> list[dict]:
-    """
-    Recupera gli avvisi di sicurezza sui dispositivi medici dal portale del Ministero della Salute.
-
-    Restituisce una lista di dizionari con i seguenti campi:
-    - fonte: "Ministero della Salute"
-    - data: data normalizzata (GG/MM/AAAA) o None
-    - titolo: titolo o descrizione sintetica dell'avviso
-    - tag: categoria assegnata (es. Cybersecurity, Interfaccia/Grafica, ecc.)
-    - link_documento: URL completo dell'avviso/documento
-    - stato_fonte: "OK" oppure una stringa descrittiva dell'errore
-
-    In caso di errori HTTP/connessione, gestisce le eccezioni in modo resiliente (failsafe).
-    """
     risultati = []
 
     try:
@@ -47,8 +34,6 @@ def fetch_ministero_salute(limit: int = 10) -> list[dict]:
 
     try:
         soup = BeautifulSoup(response.text, "html.parser")
-
-        # Cerca blocchi item o tabelle contenenti gli avvisi
         items = soup.find_all("tr")
         if not items:
             items = soup.find_all("li")
@@ -68,7 +53,6 @@ def fetch_ministero_salute(limit: int = 10) -> list[dict]:
             href = link_elem.get("href", "")
             link_documento = urljoin(BASE_URL, href) if href else ""
 
-            # Estrazione data (cerca in span, time, td o classi contenenti 'data')
             data_raw = None
             date_elem = item.find(class_=lambda c: c and "data" in c.lower()) if hasattr(item, "find") else None
             if date_elem:
@@ -84,12 +68,22 @@ def fetch_ministero_salute(limit: int = 10) -> list[dict]:
             data_norm = normalizza_data(data_raw)
             tag = assegna_tag(titolo)
 
+            item_id = f"IT-MDS-{len(risultati)+1:03d}"
             risultati.append({
                 "fonte": "Ministero della Salute",
+                "id_segnalazione": item_id,
+                "id": item_id,
+                "data_pubblicazione": data_norm,
                 "data": data_norm,
+                "dispositivo": titolo[:120],
+                "descrizione_evento": titolo,
                 "titolo": titolo,
+                "title": titolo,
                 "tag": tag,
+                "tipologia": "Avviso di Sicurezza",
                 "link_documento": link_documento,
+                "url_fonte": link_documento,
+                "url": link_documento,
                 "stato_fonte": "OK",
             })
 
@@ -109,4 +103,6 @@ class MinisteroSaluteScraper:
         """Recupera gli avvisi di sicurezza dal Ministero della Salute."""
         return fetch_ministero_salute(limit=limit)
 
-
+    def search(self, keyword: str = "", start_date: str = None, end_date: str = None) -> list[dict]:
+        """Metodo standard per la ricerca con keyword e range temporale."""
+        return self.fetch_data(search_term=keyword)

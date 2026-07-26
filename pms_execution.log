@@ -170,3 +170,12 @@
 2026-07-26 12:10:58,516 - [WARNING] - scrapers.openfda_maude - [openFDA] Risposta non corretta dalla fonte API (HTTP 404).
 2026-07-26 12:11:00,187 - [WARNING] - scrapers.fda_recalls - [FDA Recalls] Risposta non corretta dall'API (HTTP 404).
 2026-07-26 12:11:05,885 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_DPR-385_Period_2026-03-28_to_2026-07-26.xlsx
+2026-07-26 16:39:39,210 - [INFO] - PMSPipeline - === INIZIO PIPELINE PMS PER KEYWORDS: ['mammography', 'web based viewer'] [Period_2025-07-26_to_2026-07-26] ===
+2026-07-26 16:39:39,899 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 16:39:41,315 - [WARNING] - scrapers.openfda_maude - [openFDA] Risposta non corretta dalla fonte API (HTTP 404).
+2026-07-26 16:39:42,681 - [WARNING] - scrapers.fda_recalls - [FDA Recalls] Risposta non corretta dall'API (HTTP 404).
+2026-07-26 16:39:45,749 - [ERROR] - scrapers.bfarm - [BfArM] Errore imprevisto durante la chiamata: ('Connection aborted.', ConnectionResetError(10054, "Connessione in corso interrotta forzatamente dall'host remoto", None, 10054, None))
+2026-07-26 16:39:47,245 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 16:39:48,818 - [WARNING] - scrapers.openfda_maude - [openFDA] Risposta non corretta dalla fonte API (HTTP 404).
+2026-07-26 16:39:50,158 - [WARNING] - scrapers.fda_recalls - [FDA Recalls] Risposta non corretta dall'API (HTTP 404).
+2026-07-26 16:39:56,054 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_DPR-385_Period_2025-07-26_to_2026-07-26.xlsx

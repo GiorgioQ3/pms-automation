@@ -31,15 +31,22 @@ class MHRAScraper:
                 for doc in group.get("documents", []):
                     title = doc.get("title", "")
                     if search_term.lower() in title.lower():
+                        item_id = f"MHRA-ALERT-{len(records)+1:03d}"
+                        url_str = f"https://www.gov.uk{doc.get('base_path', '')}"
                         records.append({
                             "fonte": "MHRA (Regno Unito)",
-                            "id_segnalazione": f"MHRA-ALERT-{len(records)+1:03d}",
+                            "id_segnalazione": item_id,
+                            "id": item_id,
                             "data_pubblicazione": normalize_date(doc.get("public_updated_at", "")[:10]),
+                            "data": normalize_date(doc.get("public_updated_at", "")[:10]),
                             "fabbricante": "N/A (MHRA Safety Notice)",
                             "dispositivo": title[:120],
                             "descrizione_evento": doc.get("description", "Medical Device Alert"),
+                            "titolo": title,
+                            "title": title,
                             "tipologia": "Device Safety Information",
-                            "url_fonte": f"https://www.gov.uk{doc.get('base_path', '')}"
+                            "url_fonte": url_str,
+                            "url": url_str,
                         })
                         if len(records) >= limit:
                             break
@@ -50,16 +57,27 @@ class MHRAScraper:
             logger.error(f"[MHRA] Errore imprevisto durante la chiamata: {e}")
             return self._fallback_parsed(search_term)
 
+    def search(self, keyword: str, start_date: str = None, end_date: str = None) -> List[Dict[str, Any]]:
+        return self.fetch_alerts(search_term=keyword)
+
     def _fallback_parsed(self, search_term: str) -> List[Dict[str, Any]]:
+        item_id = f"MHRA-DSI-{search_term.upper()}-2024"
+        title_str = f"Medical Device Safety Information per '{search_term}'"
+        url_str = f"https://www.gov.uk/drug-device-alerts?keywords={search_term}"
         return [
             {
                 "fonte": "MHRA (Regno Unito)",
-                "id_segnalazione": f"MHRA-DSI-{search_term.upper()}-2024",
+                "id_segnalazione": item_id,
+                "id": item_id,
                 "data_pubblicazione": normalize_date("2024-01-20"),
+                "data": normalize_date("2024-01-20"),
                 "fabbricante": "MHRA Monitored Firm",
                 "dispositivo": f"Software / Device ({search_term})",
-                "descrizione_evento": f"Medical Device Safety Information per '{search_term}'",
+                "descrizione_evento": title_str,
+                "titolo": title_str,
+                "title": title_str,
                 "tipologia": "Device Safety Information",
-                "url_fonte": f"https://www.gov.uk/drug-device-alerts?keywords={search_term}"
+                "url_fonte": url_str,
+                "url": url_str,
             }
         ]

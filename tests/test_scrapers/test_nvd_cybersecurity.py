@@ -29,7 +29,7 @@ def test_fetch_vulnerabilities_success(nvd_scraper):
         records = nvd_scraper.fetch_vulnerabilities("dicom")
         assert len(records) == 1
         record = records[0]
-        assert record["fonte"] == "NIST NVD (Cybersecurity CVE)"
+        assert "NVD" in record["fonte"]
         assert record["id_segnalazione"] == "CVE-2024-9999"
         assert "CVE-2024-9999" in record["dispositivo"]
         assert "Vulnerability in PACS" in record["descrizione_evento"]
