@@ -127,3 +127,4 @@
 2026-07-25 16:00:23,943 - [INFO] - PMSPipeline - Generazione Report Excel Audit-Ready...
 2026-07-25 16:00:24,017 - [INFO] - core.excel_generator - Report Excel generato con successo in C:\Users\giorg\OneDrive\Desktop\pms-automation\PMS_Report_MDR_2017_745.xlsx
 2026-07-25 16:00:24,018 - [INFO] - PMSPipeline - === PIPELINE COMPLETATA! Report salvato in: PMS_Report_MDR_2017_745.xlsx ===
+2026-07-26 11:17:14,581 - [INFO] - PMSPipeline - Configurazione caricata con successo da 'config.json'.
