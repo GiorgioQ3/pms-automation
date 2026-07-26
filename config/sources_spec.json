@@ -1,0 +1,62 @@
+{
+  "sources": {
+    "Minister of Health": {
+      "country": "IT",
+      "type": "HTML_SCRAPER",
+      "date_format": "DD/MM/YYYY",
+      "keyword_style": "plain_text",
+      "notes": "Query via form HTML / parametri GET"
+    },
+    "MAUDE": {
+      "country": "USA",
+      "type": "REST_API",
+      "date_format": "YYYYMMDD",
+      "date_query_param": "date_received:[{start} TO {end}]",
+      "keyword_style": "quoted_field_query",
+      "notes": "API openFDA event.json"
+    },
+    "MD Recalls (FDA)": {
+      "country": "USA",
+      "type": "REST_API",
+      "date_format": "YYYYMMDD",
+      "date_query_param": "event_date_posted:[{start} TO {end}]",
+      "keyword_style": "quoted_field_query",
+      "notes": "API openFDA recall.json"
+    },
+    "Safety Communication (FDA)": {
+      "country": "USA",
+      "type": "HTML_SCRAPER",
+      "date_format": "YYYY-MM-DD",
+      "keyword_style": "plain_text",
+      "notes": "Scraping lista safety communications FDA"
+    },
+    "Letters to Health Care Providers (FDA)": {
+      "country": "USA",
+      "type": "HTML_SCRAPER",
+      "date_format": "YYYY-MM-DD",
+      "keyword_style": "plain_text",
+      "notes": "Scraping lettere d'avviso FDA"
+    },
+    "National Vulnerability Database (NVD)": {
+      "country": "GLOBAL",
+      "type": "REST_API",
+      "date_format": "YYYY-MM-DDTHH:mm:ss.000",
+      "keyword_style": "url_encoded",
+      "notes": "API NIST NVD CVE v2"
+    },
+    "BfArM": {
+      "country": "DE",
+      "type": "HTML_SCRAPER",
+      "date_format": "DD.MM.YYYY",
+      "keyword_style": "plain_text",
+      "notes": "Scraping avvisi di sicurezza tedeschi"
+    },
+    "MHRA": {
+      "country": "UK",
+      "type": "HTML_SCRAPER",
+      "date_format": "YYYY-MM-DD",
+      "keyword_style": "plain_text",
+      "notes": "Scraping allerte di sicurezza Regno Unito"
+    }
+  }
+}
