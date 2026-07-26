@@ -179,3 +179,16 @@
 2026-07-26 16:39:48,818 - [WARNING] - scrapers.openfda_maude - [openFDA] Risposta non corretta dalla fonte API (HTTP 404).
 2026-07-26 16:39:50,158 - [WARNING] - scrapers.fda_recalls - [FDA Recalls] Risposta non corretta dall'API (HTTP 404).
 2026-07-26 16:39:56,054 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_DPR-385_Period_2025-07-26_to_2026-07-26.xlsx
+2026-07-26 16:50:33,683 - [INFO] - PMSPipeline - === INIZIO PIPELINE PMS PER KEYWORDS: ['DICOM viewer'] [Period_2026-06-26_to_2026-07-26] ===
+2026-07-26 16:50:34,779 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 16:50:36,390 - [INFO] - scrapers.openfda_maude - [openFDA MAUDE] Nessun record trovato (HTTP 404) per keyword '"DICOM viewer"'.
+2026-07-26 16:50:37,860 - [INFO] - scrapers.fda_recalls - [FDA Recalls] Nessun record trovato (HTTP 404) per keyword '"DICOM viewer"'.
+2026-07-26 16:50:41,441 - [ERROR] - scrapers.bfarm - [BfArM] Errore imprevisto durante la chiamata: ('Connection aborted.', ConnectionResetError(10054, "Connessione in corso interrotta forzatamente dall'host remoto", None, 10054, None))
+2026-07-26 16:50:42,496 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_DPR-385_Period_2026-06-26_to_2026-07-26.xlsx
+2026-07-26 16:50:42,497 - [INFO] - PMSPipeline - Pipeline completata. Record totali unici: 3. File: PMS_Report_DPR-385_Period_2026-06-26_to_2026-07-26.xlsx
+2026-07-26 16:50:53,121 - [INFO] - PMSPipeline - === INIZIO PIPELINE PMS PER KEYWORDS: ['DICOM viewer'] [Period_2026-03-28_to_2026-07-26] ===
+2026-07-26 16:50:53,855 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 16:50:55,275 - [INFO] - scrapers.openfda_maude - [openFDA MAUDE] Nessun record trovato (HTTP 404) per keyword '"DICOM viewer"'.
+2026-07-26 16:50:56,596 - [INFO] - scrapers.fda_recalls - [FDA Recalls] Nessun record trovato (HTTP 404) per keyword '"DICOM viewer"'.
+2026-07-26 16:51:02,249 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_DPR-385_Period_2026-03-28_to_2026-07-26.xlsx
+2026-07-26 16:51:02,250 - [INFO] - PMSPipeline - Pipeline completata. Record totali unici: 1. File: PMS_Report_DPR-385_Period_2026-03-28_to_2026-07-26.xlsx
