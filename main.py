@@ -119,6 +119,8 @@ class PMSOrchestrator:
         if comp_list:
             self.nlp_tagger.competitors = comp_list
 
+        source_errors: Dict[str, Optional[str]] = {src_name: None for src_name, _ in scrapers}
+
         for kw in keywords:
             keyword_stats[kw] = {src_name: {"tot": 0, "dupl": 0, "sel": 0} for src_name, _ in scrapers}
 
@@ -137,6 +139,7 @@ class PMSOrchestrator:
                     for rec in records:
                         rec["keyword_matched"] = kw
                         rec["source_name"] = src_name
+                        rec["source_site"] = rec.get("source_site") or rec.get("fonte") or src_name
                         rec["date"] = self.date_normalizer.normalize(rec.get("date") or rec.get("data_pubblicazione"))
 
                         is_dup, _ = self.deduplicator.is_duplicate(rec)
@@ -149,6 +152,26 @@ class PMSOrchestrator:
 
                 except Exception as e:
                     logger.error(f"Errore nello scraping per keyword '{kw}' su '{src_name}': {e}")
+                    source_errors[src_name] = str(e)
+
+        source_summary = []
+        for src_name, _ in scrapers:
+            tot_found = sum(keyword_stats[kw][src_name]["tot"] for kw in keywords)
+            sel_found = sum(keyword_stats[kw][src_name]["sel"] for kw in keywords)
+            err = source_errors.get(src_name)
+            if err:
+                status = "Errore"
+            elif tot_found > 0:
+                status = "Completato"
+            else:
+                status = "0 Risultati"
+
+            source_summary.append({
+                "Sito / Fonte": src_name,
+                "Record Trovati": tot_found,
+                "Record Selezionati": sel_found,
+                "Stato Scansione": status
+            })
 
         signal_metrics = self.signal_detector.analyze_signals(all_selected_records)
 
@@ -168,6 +191,7 @@ class PMSOrchestrator:
             "keywords": keywords,
             "total_selected": len(all_selected_records),
             "keyword_stats": keyword_stats,
+            "source_summary": source_summary,
             "signal_metrics": signal_metrics,
             "excel_filename": excel_filename,
             "search_date": search_date,

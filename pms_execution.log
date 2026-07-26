@@ -192,3 +192,34 @@
 2026-07-26 16:50:56,596 - [INFO] - scrapers.fda_recalls - [FDA Recalls] Nessun record trovato (HTTP 404) per keyword '"DICOM viewer"'.
 2026-07-26 16:51:02,249 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_DPR-385_Period_2026-03-28_to_2026-07-26.xlsx
 2026-07-26 16:51:02,250 - [INFO] - PMSPipeline - Pipeline completata. Record totali unici: 1. File: PMS_Report_DPR-385_Period_2026-03-28_to_2026-07-26.xlsx
+2026-07-26 17:05:22,364 - [INFO] - PMSPipeline - === INIZIO PIPELINE PMS PER KEYWORDS: ['mammography', 'DICOM viewer'] [Period_ALL_to_2026-07-26] ===
+2026-07-26 17:05:23,244 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 17:05:49,496 - [INFO] - PMSPipeline - === INIZIO PIPELINE PMS PER KEYWORDS: ['mammography', 'DICOM viewer'] [Period_ALL_to_2026-07-26] ===
+2026-07-26 17:05:50,291 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 17:06:01,290 - [ERROR] - scrapers.openfda_maude - [openFDA MAUDE] Errore imprevisto durante il recupero dei dati: HTTPSConnectionPool(host='api.fda.gov', port=443): Read timed out. (read timeout=10)
+2026-07-26 17:06:06,429 - [ERROR] - scrapers.bfarm - [BfArM] Errore imprevisto durante la chiamata: ('Connection aborted.', ConnectionResetError(10054, "Connessione in corso interrotta forzatamente dall'host remoto", None, 10054, None))
+2026-07-26 17:06:07,958 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 17:06:19,107 - [ERROR] - scrapers.openfda_maude - [openFDA MAUDE] Errore imprevisto durante il recupero dei dati: HTTPSConnectionPool(host='api.fda.gov', port=443): Read timed out. (read timeout=10)
+2026-07-26 17:06:25,756 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_DPR-385_Period_ALL_to_2026-07-26.xlsx
+2026-07-26 17:06:25,757 - [INFO] - PMSPipeline - Pipeline completata. Record totali unici: 0. File: PMS_Report_DPR-385_Period_ALL_to_2026-07-26.xlsx
+2026-07-26 17:06:30,298 - [INFO] - PMSPipeline - === INIZIO PIPELINE PMS PER KEYWORDS: ['mammography', 'DICOM viewer'] [Period_ALL_to_2026-07-26] ===
+2026-07-26 17:06:31,115 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 17:06:42,275 - [ERROR] - scrapers.openfda_maude - [openFDA MAUDE] Errore imprevisto durante il recupero dei dati: HTTPSConnectionPool(host='api.fda.gov', port=443): Read timed out. (read timeout=10)
+2026-07-26 17:06:49,740 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 17:07:00,779 - [ERROR] - scrapers.openfda_maude - [openFDA MAUDE] Errore imprevisto durante il recupero dei dati: HTTPSConnectionPool(host='api.fda.gov', port=443): Read timed out. (read timeout=10)
+2026-07-26 17:07:07,805 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_DPR-385_Period_ALL_to_2026-07-26.xlsx
+2026-07-26 17:07:07,806 - [INFO] - PMSPipeline - Pipeline completata. Record totali unici: 0. File: PMS_Report_DPR-385_Period_ALL_to_2026-07-26.xlsx
+2026-07-26 17:15:07,965 - [INFO] - PMSPipeline - === INIZIO PIPELINE PMS PER KEYWORDS: ['DICOM viewer'] [Period_2026-03-28_to_2026-07-26] ===
+2026-07-26 17:15:09,055 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 17:15:19,981 - [ERROR] - scrapers.bfarm - [BfArM] Errore imprevisto durante la chiamata: ('Connection aborted.', ConnectionResetError(10054, "Connessione in corso interrotta forzatamente dall'host remoto", None, 10054, None))
+2026-07-26 17:15:20,837 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_DPR-385_Period_2026-03-28_to_2026-07-26.xlsx
+2026-07-26 17:15:20,837 - [INFO] - PMSPipeline - Pipeline completata. Record totali unici: 10. File: PMS_Report_DPR-385_Period_2026-03-28_to_2026-07-26.xlsx
+2026-07-26 17:22:20,904 - [INFO] - PMSPipeline - === INIZIO PIPELINE PMS PER KEYWORDS: ['DICOM viewer'] [Period_2026-03-28_to_2026-07-26] ===
+2026-07-26 17:22:21,973 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 17:22:33,038 - [ERROR] - scrapers.bfarm - [BfArM] Errore imprevisto durante la chiamata: ('Connection aborted.', ConnectionResetError(10054, "Connessione in corso interrotta forzatamente dall'host remoto", None, 10054, None))
+2026-07-26 17:22:33,852 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_DPR-385_Period_2026-03-28_to_2026-07-26.xlsx
+2026-07-26 17:22:33,853 - [INFO] - PMSPipeline - Pipeline completata. Record totali unici: 0. File: PMS_Report_DPR-385_Period_2026-03-28_to_2026-07-26.xlsx
+2026-07-26 17:22:51,827 - [INFO] - PMSPipeline - === INIZIO PIPELINE PMS PER KEYWORDS: ['DICOM viewer'] [Period_2025-07-26_to_2026-07-26] ===
+2026-07-26 17:22:52,527 - [INFO] - httpx - HTTP Request: GET https://www.salute.gov.it/portale/dispositiviMedici/ricercaAvvisiDispositiviMedici.jsp "HTTP/1.1 200 OK"
+2026-07-26 17:23:06,715 - [INFO] - core.excel_generator - Report DPR-385 salvato con successo in PMS_Report_DPR-385_Period_2025-07-26_to_2026-07-26.xlsx
+2026-07-26 17:23:06,716 - [INFO] - PMSPipeline - Pipeline completata. Record totali unici: 0. File: PMS_Report_DPR-385_Period_2025-07-26_to_2026-07-26.xlsx

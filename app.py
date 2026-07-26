@@ -5,6 +5,7 @@ Interfaccia utente aggiornata con indicazione esplicita della regola della virgo
 
 import streamlit as st
 import os
+import pandas as pd
 from datetime import datetime, timedelta
 from main import PMSOrchestrator
 
@@ -86,6 +87,16 @@ if st.button("🚀 Avvia Analisi Post-Market Surveillance (DPR-385)", type="prim
         else:
             col4.success(f"🟢 Livello Rischio: {risk_level}")
 
+        # TABELLA RIASSUNTIVA FONTI CONSULTATE NELLA GUI
+        st.markdown("---")
+        st.subheader("🌐 Tabella Riassuntiva Fonti Consultate")
+        source_summary = results.get("source_summary", [])
+        if source_summary:
+            df_summary = pd.DataFrame(source_summary)
+            st.dataframe(df_summary, use_container_width=True)
+        else:
+            st.info("Nessuna informazione sulle fonti disponibile.")
+
         st.markdown("---")
         st.subheader("📊 Sintesi Matrice DPR-385 per Keyword")
         for kw, stats in results["keyword_stats"].items():
@@ -97,7 +108,7 @@ if st.button("🚀 Avvia Analisi Post-Market Surveillance (DPR-385)", type="prim
         if excel_path and os.path.exists(excel_path):
             with open(excel_path, "rb") as f:
                 st.download_button(
-                    label="📥 Scarica Report Excel Completo (Protocollo DPR-385)",
+                    label="📥 Scarica Report Excel Completo con Collegamenti Ipertestuali (Protocollo DPR-385)",
                     data=f,
                     file_name=excel_path,
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

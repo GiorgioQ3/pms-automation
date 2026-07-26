@@ -25,9 +25,10 @@ class OpenFDAMaudeScraper:
     ) -> List[Dict[str, Any]]:
         """
         Esegue la ricerca su openFDA MAUDE per la keyword specificata.
-        Gestisce HTTP 404 come esito a 0 risultati trovati.
+        Gestisce HTTP 404 come esito a 0 risultati trovati e filtra localmente i risultati.
         """
-        query = f'device.brand_name:"{search_term}" OR device.generic_name:"{search_term}" OR mdr_text.text:"{search_term}"'
+        clean_term = search_term.strip()
+        query = f'device.brand_name:"{clean_term}" OR device.generic_name:"{clean_term}" OR mdr_text.text:"{clean_term}"'
         if start_date and end_date:
             f_start = start_date.replace("-", "")
             f_end = end_date.replace("-", "")
@@ -40,7 +41,7 @@ class OpenFDAMaudeScraper:
 
             # openFDA restituisce HTTP 404 quando non ci sono match
             if response.status_code == 404:
-                logger.info(f"[openFDA MAUDE] Nessun record trovato (HTTP 404) per keyword '{search_term}'.")
+                logger.info(f"[openFDA MAUDE] Nessun record trovato (HTTP 404) per keyword '{clean_term}'.")
                 return []
 
             if response.status_code != 200:
@@ -53,18 +54,56 @@ class OpenFDAMaudeScraper:
             normalized_records: List[Dict[str, Any]] = []
             for item in results:
                 parsed = self._parse_record(item)
-                if parsed:
+                if parsed and self._record_matches_keywords(parsed, item, clean_term):
                     normalized_records.append(parsed)
 
             return normalized_records
 
         except Exception as e:
-            logger.error(f"[openFDA MAUDE] Errore imprevisto durante il recupero dei dati: {e}")
+            logger.error(f"[openFDA MAUDE] Errore o Timeout durante il recupero dei dati openFDA per '{clean_term}': {e}")
             return []
 
     def search(self, keyword: str, start_date: str = None, end_date: str = None) -> List[Dict[str, Any]]:
         """Alias per retrocompatibilità e supporto interfaccia search."""
         return self.fetch_events(search_term=keyword, start_date=start_date, end_date=end_date)
+
+    def _record_matches_keywords(self, parsed: Dict[str, Any], item: Dict[str, Any], search_term: str) -> bool:
+        """Filtraggio di sicurezza locale (Post-Fetch Filter) per verificare la pertinenza reale della keyword."""
+        if not search_term:
+            return True
+
+        keywords = [k.lower() for k in search_term.replace(",", " ").split() if len(k.strip()) > 1]
+        if not keywords:
+            return True
+
+        text_blocks = [
+            parsed.get("dispositivo", ""),
+            parsed.get("descrizione_evento", ""),
+            parsed.get("titolo", ""),
+            parsed.get("fabbricante", "")
+        ]
+
+        # Estrai testo aggiuntivo da device e mdr_text di openFDA
+        devices = item.get("device", [])
+        if isinstance(devices, list):
+            for dev in devices:
+                if isinstance(dev, dict):
+                    text_blocks.append(dev.get("brand_name", ""))
+                    text_blocks.append(dev.get("generic_name", ""))
+
+        mdr_text = item.get("mdr_text", [])
+        if isinstance(mdr_text, list):
+            for txt_obj in mdr_text:
+                if isinstance(txt_obj, dict):
+                    text_blocks.append(txt_obj.get("text", ""))
+
+        combined_text = " ".join(str(b) for b in text_blocks).lower()
+
+        # Verifica se l'intera search_term o almeno uno dei token e presente
+        if search_term.lower() in combined_text:
+            return True
+
+        return any(kw in combined_text for kw in keywords)
 
     def _parse_record(self, item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         try:

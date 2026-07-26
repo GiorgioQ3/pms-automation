@@ -251,16 +251,16 @@ class ExcelGenerator:
         link_font = Font(name="Calibri", size=11, color="0000FF", underline="single")
 
         for r_idx, rec in enumerate(records, start=2):
-            ws.cell(row=r_idx, column=1, value=rec.get("fonte", rec.get("source_name", "")))
-            ws.cell(row=r_idx, column=2, value=rec.get("id_segnalazione", rec.get("id", "")))
-            ws.cell(row=r_idx, column=3, value=rec.get("data_pubblicazione", rec.get("data", rec.get("date", ""))))
+            ws.cell(row=r_idx, column=1, value=rec.get("fonte") or rec.get("source_name") or rec.get("source_site", ""))
+            ws.cell(row=r_idx, column=2, value=rec.get("id_segnalazione") or rec.get("id") or rec.get("reference", ""))
+            ws.cell(row=r_idx, column=3, value=rec.get("data_pubblicazione") or rec.get("data") or rec.get("date", ""))
             ws.cell(row=r_idx, column=4, value=rec.get("fabbricante", ""))
-            ws.cell(row=r_idx, column=5, value=rec.get("dispositivo", rec.get("titolo", rec.get("title", ""))))
-            ws.cell(row=r_idx, column=6, value=rec.get("descrizione_evento", rec.get("summary", rec.get("titolo", rec.get("title", "")))))
-            ws.cell(row=r_idx, column=7, value=rec.get("tipologia", rec.get("tag", "")))
-            ws.cell(row=r_idx, column=8, value=rec.get("tag_competitor", rec.get("tag", "N/A")))
+            ws.cell(row=r_idx, column=5, value=rec.get("dispositivo") or rec.get("titolo") or rec.get("title", ""))
+            ws.cell(row=r_idx, column=6, value=rec.get("descrizione_evento") or rec.get("summary") or rec.get("titolo") or rec.get("title", ""))
+            ws.cell(row=r_idx, column=7, value=rec.get("tipologia") or rec.get("tag", ""))
+            ws.cell(row=r_idx, column=8, value=rec.get("tag_competitor") or rec.get("tag", "N/A"))
             
-            url_val = rec.get("url_fonte", rec.get("url", rec.get("link_documento", "")))
+            url_val = rec.get("url_fonte") or rec.get("url") or rec.get("link_documento") or rec.get("link") or ""
             cell_url = ws.cell(row=r_idx, column=9, value=url_val)
             if str(url_val).startswith(("http://", "https://")):
                 cell_url.hyperlink = str(url_val)
@@ -275,3 +275,24 @@ class ExcelGenerator:
 def genera_excel_report(dati: List[Dict[str, Any]], output_path: str = "PMS_Report_DPR-385.xlsx") -> str:
     generator = ExcelGenerator(file_path=output_path)
     return generator.generate(records=dati)
+
+
+def genera_excel_con_ipertesti(records: List[Dict[str, Any]], output_filename: str = "PMS_Report_Con_Link.xlsx") -> str:
+    generator = ExcelGenerator(file_path=output_filename)
+    return generator.generate(records=records)
+
+
+def genera_tabella_riassuntiva_siti(raw_results: List[Dict[str, Any]]) -> Any:
+    import pandas as pd
+    siti_mappa = {}
+    for record in raw_results:
+        sito = record.get("source_site") or record.get("fonte") or record.get("source_name") or "Sconosciuto"
+        if sito not in siti_mappa:
+            siti_mappa[sito] = {"Sito / Fonte": sito, "Record Trovati": 0, "Stato Scansione": "Completato"}
+        siti_mappa[sito]["Record Trovati"] += 1
+
+    df_summary = pd.DataFrame(list(siti_mappa.values()))
+    if df_summary.empty:
+        df_summary = pd.DataFrame(columns=["Sito / Fonte", "Record Trovati", "Stato Scansione"])
+    return df_summary
+

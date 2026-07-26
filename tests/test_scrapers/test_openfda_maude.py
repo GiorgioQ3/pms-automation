@@ -78,3 +78,56 @@ def test_fetch_events_exception(scraper):
     ):
         results = scraper.fetch_events("Software CAD Diagnostic")
         assert results == []
+
+
+def test_fetch_events_post_fetch_filter_filters_unrelated_devices(scraper):
+    mock_response_data = {
+        "results": [
+            {
+                "report_number": "FDA-2023-001",
+                "mdr_report_key": "123456",
+                "date_received": "20231025",
+                "event_type": "Malfunction",
+                "device": [
+                    {
+                        "brand_name": "Generic Syringe Model X",
+                        "generic_name": "Piston Syringe",
+                        "manufacturer_d_name": "Generic Medical Inc",
+                    }
+                ],
+                "mdr_text": [
+                    {"text": "Syringe plunger was stuck during fluid injection."}
+                ],
+            },
+            {
+                "report_number": "FDA-2023-002",
+                "mdr_report_key": "654321",
+                "date_received": "20231026",
+                "event_type": "Malfunction",
+                "device": [
+                    {
+                        "brand_name": "DICOM Viewer Workstation",
+                        "generic_name": "PACS Software",
+                        "manufacturer_d_name": "Imaging Systems Corp",
+                    }
+                ],
+                "mdr_text": [
+                    {"text": "DICOM image rendering failure during mammography review."}
+                ],
+            }
+        ]
+    }
+
+    with patch("scrapers.openfda_maude.requests.get") as mock_get:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = mock_response_data
+        mock_get.return_value = mock_resp
+
+        results = scraper.fetch_events("DICOM viewer")
+
+        # Deve conservare solo il record 2 e scartare la siringa generica
+        assert len(results) == 1
+        assert results[0]["id_segnalazione"] == "FDA-2023-002"
+        assert "DICOM" in results[0]["dispositivo"]
+
